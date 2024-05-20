@@ -2,69 +2,86 @@
 #include <iostream>
 #include <vector>
 
-int Leader(std::vector<int>& par, int vertex) {
-  if (par[vertex] == vertex) {
-    return vertex;
-  }
-  par[vertex] = Leader(par, par[vertex]);
-  return par[vertex];
-}
-
-bool InOneSet(std::vector<int>& par, int a, int b) {
-  return Leader(par, a) == Leader(par, b);
-}
-
-void Unite(std::vector<int>& par, std::vector<int>& weight, int a, int b) {
-  int para = Leader(par, a);
-  int parb = Leader(par, b);
-
-  if (weight[para] > weight[par[b]]) {
-    std::swap(para, parb);
-  }
-  weight[parb] += weight[para];
-  par[para] = parb;
-}
-
 struct Triplet {
-  int w;
-  int a;
-  int b;
+    int w;
+    int a;
+    int b;
 
-  Triplet(int ww, int aa, int bb) : w(ww), a(aa), b(bb) {}
+    Triplet(int ww, int aa, int bb) : w(ww), a(aa), b(bb) {}
+};
+
+class Dsu {
+    std::vector<int> par;
+    std::vector<int> weight;
+
+public:
+    Dsu(int n) {
+        std::vector<int> par(n);
+        std::vector<int> weight(n, 1);
+
+        for (int i = 0; i < n; i++) {
+            par[i] = i;
+        }
+    }
+
+
+    int Leader(int vertex) {
+        if (par[vertex] == vertex) {
+            return vertex;
+        }
+        par[vertex] = Leader(par[vertex]);
+        return par[vertex];
+    }
+
+    bool InOneSet(int a, int b) {
+        return Leader(a) == Leader(b);
+    }
+
+    void Unite(int a, int b) {
+        int para = Leader(a);
+        int parb = Leader(b);
+
+        if (weight[para] > weight[par[b]]) {
+            std::swap(para, parb);
+        }
+        weight[parb] += weight[para];
+        par[para] = parb;
+    }
+
 };
 
 bool Cmp(const Triplet& a, const Triplet& b) { return a.w < b.w; }
 
+
 int main() {
-  int n;
-  int k;
-  std::cin >> n >> k;
-  std::vector<int> par(n);
-  std::vector<int> weight(n, 1);
-  for (int i = 0; i < n; i++) {
-    par[i] = i;
-  }
+    int n;
+    int k;
+    std::cin >> n >> k;
 
-  std::vector<Triplet> edges;
-  for (int i = 0; i < k; i++) {
-    int a;
-    int b;
-    int w;
-    std::cin >> a >> b >> w;
-    a -= 1;
-    b -= 1;
-    Triplet tmp(w, a, b);
-    edges.push_back(tmp);
-  }
+    Dsu MyDsu(n);
 
-  sort(edges.begin(), edges.end(), Cmp);
-
-  int ans = 0;
-  for (auto e : edges) {
-    if (!InOneSet(par, e.a, e.b)) {
-      Unite(par, weight, e.a, e.b);
-      ans += e.w;
+    std::vector<Triplet> edges;
+    for (int i = 0; i < k; i++) {
+        int a;
+        int b;
+        int w;
+        std::cin >> a >> b >> w;
+        a -= 1;
+        b -= 1;
+        Triplet tmp(w, a, b);
+        edges.push_back(tmp);
     }
-  }
-  std::cout << ans;
+
+
+
+    sort(edges.begin(), edges.end(), Cmp);
+
+    int ans = 0;
+    for (auto e : edges) {
+        if (!MyDsu.InOneSet(e.a, e.b)) {
+            MyDsu.Unite(e.a, e.b);
+            ans += e.w;
+        }
+    }
+    std::cout << ans;
 }

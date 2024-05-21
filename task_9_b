@@ -1,0 +1,88 @@
+#include <algorithm>
+#include <iostream>
+#include <vector>
+
+struct Triplet {
+    int first;
+    int second;
+    int third;
+
+    Triplet(int input_1, int input_2, int input_3) :
+    first(input_1), second(input_2), third(input_3) {}
+};
+
+class Dsu {
+public:
+    Dsu(int vertexes_amount) {
+        std::vector<int> par(vertexes_amount);
+        std::vector<int> weight(vertexes_amount, 1);
+
+        for (int i = 0; i < vertexes_amount; i++) {
+            par[i] = i;
+        }
+    }
+
+    bool InOneSet(int a, int b) {
+        return Leader(a) == Leader(b);
+    }
+
+    void Unite(int a, int b) {
+        int para = Leader(a);
+        int parb = Leader(b);
+
+        if (weight[para] > weight[par[b]]) {
+            std::swap(para, parb);
+        }
+        weight[parb] += weight[para];
+        par[para] = parb;
+    }
+
+
+
+private:
+    int Leader(int vertex) {
+        if (par[vertex] == vertex) {
+            return vertex;
+        }
+        par[vertex] = Leader(par[vertex]);
+        return par[vertex];
+    }
+
+    std::vector<int> par;
+    std::vector<int> weight;
+
+};
+
+bool Cmp(const Triplet& a, const Triplet& b) { return a.first < b.first; }
+
+
+int main() {
+    int vertexes_amount;
+    int edges_amount;
+    std::cin >> vertexes_amount >> edges_amount;
+
+    Dsu MyDsu(vertexes_amount);
+
+    std::vector<Triplet> edges;
+    for (int i = 0; i < edges_amount; i++) {
+        int first;
+        int second;
+        int weight;
+        std::cin >> first >> second >> weight;
+        first -= 1;
+        second -= 1;
+        Triplet tmp(weight, first, second);
+        edges.push_back(tmp);
+    }
+    
+    sort(edges.begin(), edges.end(), Cmp);
+
+    int ans = 0;
+    for (auto e : edges) {
+        if (!MyDsu.InOneSet(e.second, e.third)) {
+            MyDsu.Unite(e.second, e.third);
+            ans += e.third;
+        }
+    }
+    std::cout << ans;
+}

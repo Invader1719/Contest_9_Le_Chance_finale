@@ -1,99 +1,120 @@
 #include <iostream>
 #include <vector>
 
-void Dfs(std::vector<std::vector<int>>& graph, std::vector<bool>& used,
-         int vertex) {
-    used[vertex] = true;
-    for (int u : graph[vertex]) {
-        if (!used[u]) {
-            Dfs(graph, used, u);
+class Graph {
+public:
+    Graph(int l, int r) {
+        graph.assign(l + r, {});
+        edges.assign(l, {});
+        mt.assign(l, {});
+        start.assign(l + r, {});
+        used.assign(r + l, false);
+        
+        for (int i = 0; i < l; i++) {
+            int max_temporary;
+            std::cin >> max_temporary;
+            for (int j = 0; j < max_temporary; j++) {
+                int a;
+                std::cin >> a;
+                a -= 1;
+                edges[i].push_back(a);
+            }
+        }
+
+        std::vector<int> mt(l);
+        for (int i = 0; i < l; i++) {
+            int a;
+            std::cin >> a;
+            a -= 1;
+            mt[i] = a;
         }
     }
-}
 
-void Dsu(std::vector<std::vector<int>>& graph, std::vector<int>& start,
-         std::vector<std::vector<int>>& edges, std::vector<int>& mt) {
-    int l = mt.size();
-    for (int i = 0; i < l; i++) {
-        for (int g : edges[i]) {
-            if (mt[i] == -1) {
-                graph[i].push_back(l + g);
-            } else if (mt[i] == g) {
-                graph[mt[i] + l].push_back(i);
-            } else {
-                graph[i].push_back(g + l);
+    void Dsu() {
+        int l = mt.size();
+        for (int i = 0; i < l; i++) {
+            for (int g : edges[i]) {
+                if (mt[i] == -1) {
+                    graph[i].push_back(l + g);
+                } else if (mt[i] == g) {
+                    graph[mt[i] + l].push_back(i);
+                } else {
+                    graph[i].push_back(g + l);
+                }
             }
         }
     }
-}
+    
+    int GetMt(int i) {
+        return mt[i];
+    }
 
-void GetAns(std::vector<bool>& used, int l, int r) {
-    std::vector<int> ans_left;
-    std::vector<int> ans_right;
-
-    int cnt_left = 0;
-    int cnt_right = 0;
-
-    for (int i = 0; i < l; i++) {
-        if (!used[i]) {
-            cnt_left++;
-            ans_left.push_back(i + 1);
+    void Dfs(int vertex) {
+        used[vertex] = true;
+        for (int u : graph[vertex]) {
+            if (!used[u]) {
+                Dfs(u);
+            }
         }
     }
 
-    for (int i = l; i < l + r; i++) {
-        if (used[i]) {
-            cnt_right += 1;
-            ans_right.push_back(i + 1 - l);
+    void GetAns(int l, int r) {
+        std::vector<int> ans_left;
+        std::vector<int> ans_right;
+
+        int cnt_left = 0;
+        int cnt_right = 0;
+
+        for (int i = 0; i < l; i++) {
+            if (!used[i]) {
+                cnt_left++;
+                ans_left.push_back(i + 1);
+            }
+        }
+
+        for (int i = l; i < l + r; i++) {
+            if (used[i]) {
+                cnt_right += 1;
+                ans_right.push_back(i + 1 - l);
+            }
+        }
+        std::cout << cnt_left + cnt_right << '\n';
+        std::cout << cnt_left << ' ';
+        for (auto p : ans_left) {
+            std::cout << p << ' ';
+        }
+        std::cout << '\n';
+        std::cout << cnt_right << ' ';
+        for (auto p : ans_right) {
+            std::cout << p << ' ';
         }
     }
-    std::cout << cnt_left + cnt_right << '\n';
-    std::cout << cnt_left << ' ';
-    for (auto p : ans_left) {
-        std::cout << p << ' ';
-    }
-    std::cout << '\n';
-    std::cout << cnt_right << ' ';
-    for (auto p : ans_right) {
-        std::cout << p << ' ';
-    }
-}
+
+
+private:
+    std::vector<std::vector<int>> graph;
+    std::vector<std::vector<int>> edges;
+    std::vector<int> mt;
+    std::vector<int> start;
+    std::vector<bool> used;
+};
 
 int main() {
     int l;
     int r;
     std::cin >> l >> r;
-    std::vector<std::vector<int>> edges(l);
+    Graph graph(l ,r);
+    
+    graph.Dsu();
+
+    
     for (int i = 0; i < l; i++) {
-        int maxt;
-        std::cin >> maxt;
-        for (int j = 0; j < maxt; j++) {
-            int a;
-            std::cin >> a;
-            a -= 1;
-            edges[i].push_back(a);
+        if (graph.GetMt(i) == -1) {
+            graph.Dfs(i);
         }
     }
 
-    std::vector<int> mt(l);
-    for (int i = 0; i < l; i++) {
-        int a;
-        std::cin >> a;
-        a -= 1;
-        mt[i] = a;
-    }
-    std::vector<std::vector<int>> graph(l + r);
-    std::vector<int> start;
-    Dsu(graph, start, edges, mt);
-
-    std::vector<bool> used(r + l, false);
-    for (int i = 0; i < l; i++) {
-        if (mt[i] == -1) {
-            Dfs(graph, used, i);
-        }
-    }
-
-    GetAns(used, l, r);
+    graph.GetAns(l, r);
 
     return 0;
 }
